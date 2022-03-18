@@ -14,7 +14,8 @@ import os
 import numpy as np
 
 # WARNING: the cpp files have to be compiled to run the graph based ensemble techniques
-# For cooc_selector, use g++ density_decomposition.cpp -fopenmp -fpermissive -I ./boost_1_63_0/ -o density_decomposition -O3
+# For cooc_selector, first download boost_1_63_0 in the working folder.
+# Then, use g++ density_decomposition.cpp -fopenmp -fpermissive -I ./boost_1_63_0/ -o density_decomposition -O3
 # For the others use gcc bb_dks.c -o bb_dks -O9
 # data: data considered, pandas DataFrame
 # target: labels corresponding to data, pandas Series
@@ -40,10 +41,7 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
     ensemble = [ensemble_feature_selection.majority_selector, ensemble_feature_selection.threshold_selector,
                 ensemble_feature_selection.threshold_selector, ensemble_feature_selection.cooc_selector,
                 ensemble_feature_selection.k_density_selector, ensemble_feature_selection.k_density_selector]
-    ensemble = [ensemble_feature_selection.majority_selector, ensemble_feature_selection.threshold_selector,
-                ensemble_feature_selection.threshold_selector]
     ensemble_name = ["Majority", "Threshold", "Threshold WMA", "Densest", "Heaviest Density", "Heaviest Density WMA"]
-    ensemble_name = ["Majority", "Threshold", "Threshold WMA"]
     # Path template for the feature selection files
     name = "_".join(["num_selec", str(n_iter_selec), "k", str(k_feat), "filter", str(pre_filter),
                             "seed", str(seed), "clf_only", str(clf_only), str(splitted)])

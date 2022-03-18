@@ -16,6 +16,23 @@ compute and plot shap values and perform ensemble feature selection.
 
 Bash code to run the code with a slurm scheduler is provided.
 
+Regarding feature selection:
+- Feature_Selection: contains a pipeline to perform a feature filtering through  an anova test, to use common correlation for selecting relevant features, to tune and perform a selection relying on classifier-based feature selectors. It also implements several ensemble techniques for feature selection based on the feature prevalence, co-selection graph or co-importance graph.
+- GHOST: contains a distance learning framework to learn a distance the most suited for a given clustering or classification task. It performs a feature weighting allowing to determine the importance of each feature for the task.
+- Clustering: contains a clustering pipeline, feature selection can then be performed using the centers of the clusters.
+Regarding classification:
+- Classification: Implements the main classifiers available in scikit-learn. It contains a pipeline to perform the classification assuming a set of relevant features has already been identified. In addition, it enables to assess the classification performance and save them in a csv file.
+- Pipeline_Classification: End-to-end classification pipeline to perform feature selection, classification, performance evaluation.
+- Shap_Values: Computes and plot the features’ importance for a given classification task.
+Regarding Clustering:
+- Clustering: implements a pipeline to tune the main clustering algorithms from scikit-learn, perform the clustering and assess the relevance of the clusters using all scikit-learn’s clustering evaluation metrics.
+- LP-Stability: is a state-of-the-art center-based clustering approach. 
+Regarding AutoML:
+- AutoML: contains the code to use the TPOT library to learn a relevant ML pipeline for a classification or regression task. The example provided here are for classification applications, but the code can easily be adapted for regression.
+
+### How to use
+Each code subfolder include explanations on how to use every useful part of the ML pipelines they contain and a main file to leverage the full pipeline on a toy example.
+
 ### Methodology
 This pipeline leverages the notions of:
 - Prevalence highlighted in: [Chassagnon 2021](https://pubmed.ncbi.nlm.nih.gov/33171345/)
