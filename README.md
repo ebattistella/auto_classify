@@ -41,14 +41,14 @@ This pipeline leverages the notions of:
 
 ### Summary
 Here an index of the different section presented in this document:
-- [Feature Selection](###feature selection)
-- [Classification](###classification)
-- [Full classification pipeline](###full classification pipeline)
-- [Shap Values](###shap values)
-- [AutoML](###tpot)
-- [Higher-order metric learning](###ghost)
-- [Clustering](###clustering)
-- [LP-Stability](###lp-stability)
+- [Feature Selection](#featureselection)
+- [Classification](#classification)
+- [Full classification pipeline](#fullclassificationpipeline)
+- [Shap Values](#shapvalues)
+- [AutoML](#tpot)
+- [Higher-order metric learning](#ghost)
+- [Clustering](#clustering)
+- [LP-Stability](#lp-stability)
 
 ### Feature Selection
 #### Description
@@ -130,7 +130,7 @@ density_decomposition.cpp and using the boost library from the folder boost_1_63
 #### Description
 This  part implements all the different functions usefull for a complete classification task 
 assuming that the features to consider are already known or have been selected with the
-previous [feature selection code](###feature selection).
+previous [feature selection code](#feature selection).
 
 Specifically, it enables to perform a model tuning, define ensemble models from the train models,
 assess the results on cross-validation using divers assessment metrics, select the best model
@@ -214,7 +214,7 @@ It is based on a genetic algorithm.
 #### Use
 - 'tpot_train.py': allows to train the autoML pipeline on a given dataset, it outputs a python file implementing the 
 pipeline and returns the trained model. It can be then used in combination with the functions provided in the 
-[assessment folder](###assessment) to obtain the performance of the model.
+[assessment folder](#assessment) to obtain the performance of the model.
 
 ### GHOST
 
