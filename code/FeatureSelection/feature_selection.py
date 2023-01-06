@@ -76,7 +76,7 @@ def pre_filter_anova(x_train, y_train, threshold_stat, name):
 
 
 # Tune and Train the feature selection techniques before performing the selection
-def feature_selector(x_train, y_train, n_iter=50, cv_num=10, clf_only=False, n_jobs=1,
+def feature_selector(x_train, y_train, criterion="balanced_accuracy", n_iter=50, cv_num=10, clf_only=False, n_jobs=1,
                      thresholds=["1*mean", "5*median", "2*mean", "0.5*mean", "3*mean"], threshold_stat=.25,
                      name="test", seed=82):
     features_selectors = []
@@ -115,8 +115,9 @@ def feature_selector(x_train, y_train, n_iter=50, cv_num=10, clf_only=False, n_j
     params_names = [str(th).replace("*", "") for th in thresholds]
     names = ['Decision_Tree', 'SVM_linear', 'Gradient_Boosting', 'AdaBoost']
 
-    # Create the pipelines with the feature selection techniques, variance threshold and data normalization (here minmax but standard normalization can also be used)
-    # are applied for every data split to prevent data leakage from the validation or the test
+    # Create the pipelines with the feature selection techniques, variance threshold and data normalization (here
+    # minmax but standard normalization can also be used) are applied for every data split to prevent data leakage
+    # from the validation or the test
     for i in range(len(names)):
         pips.append(Pipeline(steps=[('Variance Threshold', VarianceThreshold()),
                                     ('scaler', MinMaxScaler()), (names[i], clfs[i]())]))
@@ -124,11 +125,12 @@ def feature_selector(x_train, y_train, n_iter=50, cv_num=10, clf_only=False, n_j
     for i in range(len(pips)):
         if not os.path.exists(name + "_" + names[i] + ".sav"):
             # Tune the feature selectors, the tuning should not be overfitting to much to not miss important features
-            # the assessment metric used is balanced accuracy
+            # the assessment metric used is balanced accuracy but it can be modified to consider the same combination
+            # of metrics as in the classification part
             print("tuning", names[i])
-            gs = RandomizedSearchCV(pips[i], params[i], verbose=0, refit='balanced_accuracy', n_iter=n_iter,
+            gs = RandomizedSearchCV(pips[i], params[i], verbose=0, refit=criterion, n_iter=n_iter,
                                     random_state=seed, n_jobs=n_jobs,
-                                    scoring='balanced_accuracy', cv=cv)
+                                    scoring=criterion, cv=cv)
             gs = gs.fit(x_train, y_cur)
             # The best parameters are selected
             model = gs.best_estimator_[-1]
@@ -232,7 +234,7 @@ def feature_selector(x_train, y_train, n_iter=50, cv_num=10, clf_only=False, n_j
 
 
 # Bootstrap version of the previous feature selection, each selection is performed over a subset of features
-def feature_selector_bootstrap(x_train, y_train, n_iter=50, cv_num=10, boot_num=10, test_size=0.4, clf_only=False,
+def feature_selector_bootstrap(x_train, y_train, criterion="balanced_accuracy", n_iter=50, cv_num=10, boot_num=10, test_size=0.4, clf_only=False,
                                n_jobs=1, thresholds=["1*mean", "5*median", "2*mean", "0.5*mean", "3*mean"],
                                threshold_stat=.25,
                                name="test", seed=82):
@@ -277,9 +279,9 @@ def feature_selector_bootstrap(x_train, y_train, n_iter=50, cv_num=10, boot_num=
     for i in range(len(pips)):
         if not os.path.exists(name + "_" + names[i] + ".sav"):
             print("tuning", names[i])
-            gs = RandomizedSearchCV(pips[i], params[i], verbose=0, refit='balanced_accuracy', n_iter=n_iter,
+            gs = RandomizedSearchCV(pips[i], params[i], verbose=0, refit=criterion, n_iter=n_iter,
                                     random_state=seed, n_jobs=n_jobs,
-                                    scoring='balanced_accuracy', cv=cv)
+                                    scoring=criterion, cv=cv)
             gs = gs.fit(x_train, y_cur)
             # We only take the classifier without the scaler
             model = gs.best_estimator_[-1]

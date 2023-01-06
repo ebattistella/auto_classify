@@ -8,12 +8,12 @@
 ### Ouput: list of selected features
 ###################################
 
-import density_decomposition_prepro
+from . import density_decomposition_prepro
 import uuid, os
 from itertools import chain
-import hks_interface
+from . import hks_interface
 import numpy as np
-from densest import densest_subgraph
+from .densest import densest_subgraph
 
 # Select the features with prevalence 100%
 def consensus_selector(diag, max_it, k_S=1, k_feat=5, th=0.25, n_jobs=1, path="./"):
@@ -35,10 +35,11 @@ def cooc_selector(cooc, max_it, k_S=1, k_feat=5, th=0.25, n_jobs=1, path="./"):
     density_decomposition_prepro.write_file(cooc, filename)
     density_decomposition_prepro.launch_decompo(filename, iter=100000, ncpu=n_jobs)
     S = density_decomposition_prepro.read_decompo(filename)
+    if S == []:
+        return []
     files = [".txt", "rates.txt", "pavafit.txt", "cuts.txt", "exact.txt"]
     for file in files:
         os.remove(filename + file)
-    print(S, k_S, chain(*S[:k_S]))
     return chain(*S[:k_S])
 
 # Rely on the heaviest k-subgraph algorithm
@@ -48,6 +49,8 @@ def k_density_selector(cooc, max_it, k_S=1, k_feat=5, th=0.25, n_jobs=1, path=".
     hks_interface.write_file(cooc, filename)
     hks_interface.launch_hks(filename, k_feat, filename + '_out')
     density, size, nodes = hks_interface.read_result(filename + '_out')
+    if size == 0:
+        return []
     # Remove the generated files
     files = [".txt", "_out.txt"]
     for file in files:

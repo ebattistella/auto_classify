@@ -22,7 +22,6 @@ warnings.warn = warn
 def training(x_train, y_train, path="test", seed=0, cv_num=10, pop=50):
     np.random.seed(seed)
 
-
     if os.path.exists(path + "_tpot.csv"):
         return
     tpot = TPOTClassifier(generations=cv_num, population_size=pop, verbosity=2,
@@ -33,7 +32,8 @@ def training(x_train, y_train, path="test", seed=0, cv_num=10, pop=50):
     return tpot
 
 
-
+# Example of main function to train TPOT
+# A thorough evaluation can be performed using the function test_results in classification.py
 if __name__ == '__main__':
     from sklearn.datasets import load_iris
     import pandas as pd

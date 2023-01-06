@@ -12,14 +12,6 @@ import numpy as np
 import networkx as nx
 from networkx.algorithms.flow import minimum_cut
 
-def test_maximal_density(G, S):
-    weights = sum([G[i, j] for i in S for j in S if i > j])
-    density = 2 * weights / (len(S) * (len(S)-1))
-    to_add = [i for i in range(len(G)) if i not in S and 2 * (weights + sum(G[i][j] for j in S)) / (len(S)*(len(S) + 1)) >= density]
-    to_remove = [i for i in S if (weights - sum(G[i][j] for j in S)) / ((len(S) - 1)*(len(S) - 2)) > density]
-    return (to_remove, to_add)
-
-
 def define_graph(M, c):
     print("graph definition")
     G = nx.Graph(incoming_graph_data=M)
@@ -83,11 +75,3 @@ def densest_subgraph(cooc):
     print("incidence")
     S, dens = Fractionnal_programming(incidence)
     return S, dens
-
-
-if __name__ == "__main__":
-    G = np.array([[0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0], [1, 1, 0, 1, 1, 1], [0, 0, 1, 0, 1, 1], [0, 0, 1, 1, 0, 1],
-                  [0, 0, 1, 1, 1, 0]])
-    S, density = densest_subgraph(G)
-    print(S, density)
-    print(test_maximal_density(G, S))

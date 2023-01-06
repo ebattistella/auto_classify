@@ -7,11 +7,12 @@
 ### Ouput: prevalence of the features per feature selector, selected features for each ensemble method considered
 ###################################
 
-import ensemble_feature_selection
-import feature_selection
+from . import ensemble_feature_selection
+from . import feature_selection
 from sklearn.model_selection import train_test_split
 import os
 import numpy as np
+from pathlib import Path
 
 # WARNING: the cpp files have to be compiled to run the graph based ensemble techniques
 # For cooc_selector, first download boost_1_63_0 in the working folder.
@@ -26,8 +27,11 @@ import numpy as np
 # seed: random seed
 # clf_only: if True, do not use feature selectors based on statistical metrics
 # splitted: if True, whole data and target sets are to be used for training
-def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filter=False, seed=0, clf_only=False,
-                  splitted=False):
+# ssd: sample size determination, allows to perform the experiments on the influence fo the sample size, if not None,
+# ssd characterizes the type of experiment with a triplet: the sample size percent to use "p", the fact of keeping a same test set for all
+# sample sizes ("partition") or a different test set for each sample size, and a second seed "subseed" to keep.
+def main_selection(data, target, criterion="balanced_accuracy", n_iter_selec=10, k_feat=10, path='./', pre_filter=False, seed=0, clf_only=False,
+                  splitted=False, ssd=None):
     np.random.seed(seed)
 
     # Feature selector names
@@ -43,7 +47,7 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
                 ensemble_feature_selection.k_density_selector, ensemble_feature_selection.k_density_selector]
     ensemble_name = ["Majority", "Threshold", "Threshold WMA", "Densest", "Heaviest Density", "Heaviest Density WMA"]
     # Path template for the feature selection files
-    name = "_".join(["num_selec", str(n_iter_selec), "k", str(k_feat), "filter", str(pre_filter),
+    name = "_".join(["num_selec", str(n_iter_selec), "feat_num", str(k_feat), "filter", str(pre_filter),
                             "seed", str(seed), "clf_only", str(clf_only), str(splitted)])
     # Number of folds in the cross-validation for the feature selection
     cv_num = 10
@@ -60,27 +64,53 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
     # Threshold for the statistical test based feature selectors, represents the percentile of feature to select
     threshold_stats = 34.
     #add the parameters to the name as the results will depend on them
-    name += "_".join([str(i) for i in threshold_select_classif]) + "_" + str(threshold_stats)
+    name += "_".join(["th_sel_classif", "_".join([str(i) for i in threshold_select_classif]), "th_stat", str(threshold_stats)])
 
     # Number of subprocesses
     n_jobs = 35
 
     directory_data = os.path.dirname(path + "preprocess/") + "/"
     results_directory = os.path.dirname(path + "results/") + "/"
-    try:
-        os.stat(results_directory)
-        os.stat(directory_data)
-    except:
-        os.mkdir(results_directory)
-        os.mkdir(results_directory + "selection/")
-        os.mkdir(directory_data)
-        os.mkdir(directory_data + "density/")
-        
+    selection_directory = results_directory + "selection/"
+    density_directory = directory_data + "density/"
+
+    Path(results_directory).mkdir(parents=True, exist_ok=True)
+    Path(directory_data).mkdir(parents=True, exist_ok=True)
+    Path(density_directory).mkdir(parents=True, exist_ok=True)
+    Path(selection_directory).mkdir(parents=True, exist_ok=True)
+
+    partition = False
+    if ssd:
+        p, partition, subseed = ssd
+        path_add = "_".join(["ssd", str(p), "partition"*partition, str(subseed)])
+        directory_data += path_add
+        results_directory += path_add
+        density_directory += path_add
+        selection_directory += path_add
     # Split the data for performing the selection on the training set only
     if not splitted:
         if not os.path.exists(directory_data + str(seed) + "_x_train.pkl"):
-            x_train, x_test, y_train, y_test = train_test_split(data, target, test_size=0.25, random_state=seed, shuffle=True,
+            # If ssd, we have to keep p% of the data for training, we define a unique test set per seed if partition
+            # otherwise the test set is dependent of the sample size.
+            if not ssd or partition:
+                x_train, x_test, y_train, y_test = train_test_split(data, target, test_size=0.25, random_state=seed, shuffle=True,
                                                                 stratify=target)
+            if ssd:
+                if partition:
+                    x = x_train
+                    y = y_train
+                else:
+                    x, _, y, _ = train_test_split(data, target, train_size=p, random_state=subseed,
+                                                                        shuffle=True,
+                                                                        stratify=target)
+                    p = 0.25
+                    subseed = seed
+                x_train, x, y_train, y = train_test_split(x, y, train_size=p, random_state=subseed,
+                                                                    shuffle=True,
+                                                                    stratify=y)
+                if not partition:
+                    x_test = x
+                    y_test = y
             x_train.to_pickle(directory_data + str(seed) + "_x_train")
             x_test.to_pickle(directory_data + str(seed) + "_x_test")
             y_train.to_pickle(directory_data + str(seed) + "_y_train")
@@ -112,7 +142,7 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
     if not os.path.exists(results_directory + str(seed) + "_features.csv"):
         if not os.path.exists(directory_data + name + "_cooc_weights.npy"):
             cooc, gene_map, max_it, weights, cooc_weights = feature_selection.feature_selector(x_train.iloc[:,features_pre_filter],
-                                                                                y_train, n_iter=n_iter_selec,
+                                                                                y_train, criterion=criterion, n_iter=n_iter_selec,
                                                                                 cv_num=cv_num, clf_only=clf_only,
                                                                                 thresholds=threshold_select_classif,
                                                                                 threshold_stat=threshold_stats,
@@ -142,7 +172,7 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
         # Sort the features by decreasing prevalence
         sorted_idx = np.argsort(diag)[::-1]
         # Save the prevalence by feature selector and in total of each selected feature
-        with open(results_directory + "selection/" + name + "_features.csv", "w") as f:
+        with open(selection_directory + name + "_features.csv", "w") as f:
             f.write(",".join(features_selectors_names) + ", Total\n")
             for feature in sorted_idx:
                 # feature is in merged space put it back into space after filtering
@@ -179,7 +209,7 @@ def main_selection(data, target, n_iter_selec=10, k_feat=10, path='./', pre_filt
                     var = weights
             # All ensemble methods have the same signature for convenience, but not all variables are used for every method
             feature = ensemble[idx](var, max_it, k_feat=k_feat, k_S=k_S, th=th_majority, n_jobs=n_jobs,
-                                    path=directory_data + "density/")
+                                    path=density_directory)
             # If no feature was selected, keep the one with highest prevalence
             if not feature:
                 feature = [np.argmax(diag)]

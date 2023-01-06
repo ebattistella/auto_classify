@@ -38,15 +38,18 @@ def write_file(graph, filename):
 def read_decompo(filename):
     s_ranks = []
     n_ranks = []
-    with open(filename + "exact.txt", 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            s_ranks.append(int(line.split(" ")[0]))
-    s_ranks.sort(reverse=True)
-    with open(filename + "rates.txt", 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            n_ranks.append(int(line.split(" ")[0]))
+    try:
+        with open(filename + "exact.txt", 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                s_ranks.append(int(line.split(" ")[0]))
+        s_ranks.sort(reverse=True)
+        with open(filename + "rates.txt", 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                n_ranks.append(int(line.split(" ")[0]))
+    except:
+        return []
     S = []
     counter = 0
     for num in s_ranks:
