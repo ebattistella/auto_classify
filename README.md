@@ -12,6 +12,9 @@
 This code provides different functions essential when performing feature selection and classification.
 In addition, it provides snippets to use the autoML technique TPOT and the distance learning method GHOST, 
 compute and plot Shap values and perform ensemble feature selection.
+To reproduce the results of the article Improving the Performance and Interpretability on Medical Datasets using Graphical Ensemble Feature Selection use the main file in the folder PipelineClassification with the data described in the article.
+Alternatively, a samll toy dataset is provided by default to experiment the code.
+A requirement.txt file descibes the versions of packages needed to run the code, it can be leverage with conda as describved in the header of the file.
 
 Regarding feature selection:
 - Feature_Selection: contains a pipeline to perform a feature filtering through an ANOVA test, to use common correlation for selecting relevant features, and to tune and perform a selection relying on classifier-based feature selectors. It also implements several ensemble techniques for feature selection based on the feature prevalence, co-selection graph or co-importance graph.
@@ -31,6 +34,8 @@ Regarding AutoML:
 Each code subfolder includes explanations on how to use every useful part of the ML pipelines they contain and a main file to leverage the full pipeline on a toy example.
 Code has been implemented as a package. Thus, in order to run the main files in the subdirectories, use the option -m and specify the path when calling python.
 Ex: python -m code.PipelineClassification.main 10 5 0 5 0 2 95 1 15
+After using this command, a results folder will be created containing the selected features and the classification performance. The results should be available witin 5 minutes on a desktop computer. 
+Please refer to the readme files in the subfolders for more details.
 
 ### Methodology
 This pipeline leverages the notions of:
